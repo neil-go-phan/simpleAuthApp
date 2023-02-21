@@ -24,6 +24,6 @@ insert INTO authorities(authority_type, permissions) value ("admin", "do anythin
 insert INTO authorities(authority_type, permissions) value ("customer", "just buy stuff");
 insert INTO authorities(authority_type, permissions) value ("employee", "restock goods");
 
-insert INTO users(full_name, username, password, authority_type) value ("admin", "admin", "81dc9bdb52d04dc20036dbd8313ed055", "admin");
-insert INTO users(full_name, username, password, authority_type) value ("customer", "customer", "81dc9bdb52d04dc20036dbd8313ed055", "customer");
-insert INTO users(full_name, username, password, authority_type) value ("employee", "employee", "81dc9bdb52d04dc20036dbd8313ed055", "employee");
+insert INTO users(full_name, username, password, authority_type) value ("admin", "admin1234", "81dc9bdb52d04dc20036dbd8313ed055", "admin");
+insert INTO users(full_name, username, password, authority_type) value ("customer", "customer1234", "81dc9bdb52d04dc20036dbd8313ed055", "customer");
+insert INTO users(full_name, username, password, authority_type) value ("employee", "employee1234", "81dc9bdb52d04dc20036dbd8313ed055", "employee");

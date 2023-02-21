@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"example/web-service-gin/database"
 	"example/web-service-gin/models"
 	"regexp"
 
@@ -11,23 +10,29 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 var validate *validator.Validate
 
-type UserRepo struct {
-	Db *gorm.DB
+// type Repository interface {
+// 	SignUp(c *gin.Context) ()
+// 	SignIn(c *gin.Context) ()
+// 	GetUsers(c *gin.Context) ()
+// }
+
+type Server struct {
+	repo models.Repository
 }
 
-func New() *UserRepo {
-	db := database.InitDb()
-	// db.AutoMigrate(&models.User{})
-	return &UserRepo{Db: db}
+func NewServer(repo models.Repository) *Server{
+	server := &Server{
+		repo: repo,
+	}
+	return server
 }
 
-func (repository *UserRepo) SignUp(c *gin.Context) {
-	var user,checkUser models.User
+func (server *Server)SignUp(c *gin.Context) {
+	var user models.User
 	c.BindJSON(&user)
 	err := validateSignUp(&user)
 	if err != nil {
@@ -35,7 +40,8 @@ func (repository *UserRepo) SignUp(c *gin.Context) {
 		return
 	}
 
-	err = models.FindUser(repository.Db, &checkUser, user.Username)
+	checkUser, err := server.repo.FindUser(user.Username)
+	// models.Repository.FindUser( &checkUser, user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Bad request"})
 		return
@@ -44,7 +50,7 @@ func (repository *UserRepo) SignUp(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Username is already taken"})
 		return
 	}
-	err = models.CreateUser(repository.Db, &user)
+	_, err = server.repo.CreateUser(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Bad request"})
 		return
@@ -52,8 +58,8 @@ func (repository *UserRepo) SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Sign up success"})
 }
 
-func (repository *UserRepo) SignIn(c *gin.Context) {
-	var user,checkUser models.User
+func (server *Server)SignIn(c *gin.Context) {
+	var user models.User
 
 	c.BindJSON(&user)
 	err := validateSignIn(&user)
@@ -61,7 +67,7 @@ func (repository *UserRepo) SignIn(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Something went wrong with input"})
 		return
 	}
-	err = models.FindUser(repository.Db, &checkUser, user.Username)
+	checkUser, err := server.repo.FindUser(user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Bad request"})
 		return
@@ -73,14 +79,14 @@ func (repository *UserRepo) SignIn(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Sign in success"})
 }
 
-func (repository *UserRepo) GetUsers(c *gin.Context) {
-	var user []models.User
-	err := models.GetUsers(repository.Db, &user)
+func (server *Server)GetUsers(c *gin.Context) {
+	// var user []models.User
+	users, err := server.repo.GetUsers()
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"success": false, "message": "Bad request"})
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, users)
 }
 
 func validateSignUp(user *models.User) error {
@@ -88,6 +94,10 @@ func validateSignUp(user *models.User) error {
 	err := validate.Var(user.FullName, "required,min=8,max=50")
 	if err != nil {
 		return err
+	}
+	checkRegexFullName := checkRegexp(user.FullName, "full_name")
+	if !checkRegexFullName {
+		return errors.New("full name must not contain special character")
 	}
 	err = validateUsernameAndPassword(user)
 	if err != nil {
@@ -106,11 +116,11 @@ func validateSignIn(user *models.User) error {
 
 func validateUsernameAndPassword(user *models.User) error {
 	validate = validator.New()
-	match := checkRegexp(user.FullName, "full_name")
+	match := checkRegexp(user.Password, "usernameAndPassword")
 	if !match {
-		return errors.New("full name must not contain special character")
+		return errors.New("password must not contain special character")
 	}
-	match = checkRegexp(user.Username, "username")
+	match = checkRegexp(user.Username, "usernameAndPassword")
 	if !match {
 		return errors.New("username must not contain special character")
 	}
@@ -123,7 +133,7 @@ func validateUsernameAndPassword(user *models.User) error {
 
 func checkRegexp(checkedString string, checkType string) bool {
 	switch checkType {
-	case "username":
+	case "usernameAndPassword":
 		match, _ := regexp.MatchString("^[a-zA-Z0-9_]*$", checkedString)
 		return match
 	case "full_name":

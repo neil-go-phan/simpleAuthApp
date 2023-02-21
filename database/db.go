@@ -12,13 +12,18 @@ const DB_NAME = "store"
 const DB_HOST = "localhost"
 const DB_PORT = "3306"
 
-var Db *gorm.DB
-func InitDb() *gorm.DB {
-	Db = connectDB()
-	return Db
+type Database interface {
+
 }
 
-func connectDB() (*gorm.DB) {
+type GROMDatabase struct {
+	*gorm.DB
+}
+
+var Db *gorm.DB
+
+
+func ConnectDB() {
 	var err error
 	dsn := DB_USERNAME +":"+ DB_PASSWORD +"@tcp"+ "(" + DB_HOST + ":" + DB_PORT +")/" + DB_NAME + "?" + "parseTime=true&loc=Local"
 	fmt.Println("dsn : ", dsn)
@@ -26,8 +31,10 @@ func connectDB() (*gorm.DB) {
 	
 	if err != nil {
 		fmt.Printf("Error connecting to database : error=%v", err)
-		return nil
 	}
+	Db = db
+}
 
-	return db
+func GetDB() *gorm.DB {
+	return Db
 }

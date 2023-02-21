@@ -11,32 +11,48 @@ type User struct {
 	AuthorityType string `json:"authority_type"`
 }
 
-// struct tag 
-
-//create a user
-func CreateUser(db *gorm.DB, User *User) (err error) {
-	User.AuthorityType = "customer"
-	err = db.Create(User).Error
-	if err != nil {
-		return err
+type Repository interface {
+	CreateUser(userInput *User) (*User, error)
+	GetUsers() (user *[]User,err error)
+	FindUser(username string) (u *User, err error) 
+}
+type Repo struct {
+	DB *gorm.DB
+}
+func (p *Repo)CreateUser(userInput *User) (*User, error) {
+	user := User{
+		FullName: userInput.FullName,
+		Username: userInput.Username,
+		Password: userInput.Password,
+		AuthorityType: "customer",
 	}
-	return nil
+	err := p.DB.Create(user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user ,nil
 }
 
-//get users
-func GetUsers(db *gorm.DB, User *[]User) (err error) {
-	err = db.Find(User).Error
+func (p *Repo)GetUsers() (user *[]User,err error) {
+	users := make([]User, 10)
+	err = p.DB.Find(&users).Error
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &users, nil
 }
 
-func FindUser(db *gorm.DB, User *User, username string) (err error) {
-	err = db.Select("username", "password").Where(map[string]interface{}{"username": username}).Find(&User).Error
-
-	if err != nil {
-		return err
+func (p *Repo)FindUser(username string) (u *User, err error) {
+	user := new(User)
+	err = p.DB.Select("username", "password").Where(map[string]interface{}{"username": username}).Find(&user).Error
+	if err!= nil {
+		return nil, err
 	}
-	return nil
+	return user, nil
+}
+
+func CreateRepository(db *gorm.DB) Repository {
+	return &Repo{
+		DB: db,
+	}
 }
