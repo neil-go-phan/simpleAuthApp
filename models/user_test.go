@@ -50,12 +50,9 @@ func (s *Suite) Test_repository_GetUsers() {
 		AddRow("customer", "customer1234", "81dc9bdb52d04dc20036dbd8313ed055", "customer").
 		AddRow("employee", "employee1234", "81dc9bdb52d04dc20036dbd8313ed055", "employee")
 	// TODO: search more about this f*cking ExpectBegin()
-	// s.mock.MatchExpectationsInOrder(false)
 
-	// s.mock.ExpectBegin()
 	s.mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `users`")).
 		WillReturnRows(rows)
-	// s.mock.ExpectCommit()
 
 	_, err := s.repository.GetUsers()
 	assert.Nil(s.T(), err)
@@ -67,15 +64,12 @@ func (s *Suite) Test_repository_FindUser() {
 		Username: "admin1234",
 		Password: "81dc9bdb52d04dc20036dbd8313ed055",
 	}
-
-	// s.mock.ExpectBegin()
 	s.mock.ExpectQuery(
 		"SELECT `username`,`password` FROM `users` WHERE `username` = ?").
 		WithArgs(want.Username).
 		WillReturnRows(sqlmock.NewRows([]string{"username", "password"}).
 			AddRow(want.Username, want.Password))
 
-	// s.mock.ExpectCommit()
 	got, err := s.repository.FindUser(want.Username)
 	assert.Nil(s.T(), err)
 

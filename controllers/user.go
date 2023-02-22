@@ -14,12 +14,6 @@ import (
 
 var validate *validator.Validate
 
-// type Repository interface {
-// 	SignUp(c *gin.Context) ()
-// 	SignIn(c *gin.Context) ()
-// 	GetUsers(c *gin.Context) ()
-// }
-
 type Server struct {
 	repo models.Repository
 }
@@ -41,7 +35,6 @@ func (server *Server)SignUp(c *gin.Context) {
 	}
 
 	checkUser, err := server.repo.FindUser(user.Username)
-	// models.Repository.FindUser( &checkUser, user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Bad request"})
 		return
@@ -80,10 +73,9 @@ func (server *Server)SignIn(c *gin.Context) {
 }
 
 func (server *Server)GetUsers(c *gin.Context) {
-	// var user []models.User
 	users, err := server.repo.GetUsers()
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"success": false, "message": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Bad request"})
 		return
 	}
 	c.JSON(http.StatusOK, users)

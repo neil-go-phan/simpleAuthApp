@@ -14,11 +14,11 @@ import (
 func main() {
 	database.ConnectDB()
 
-	r := setupRouter()
+	r := SetupRouter()
 	_ = r.Run(":8080")
 }
 
-func setupRouter() *gin.Engine {
+func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
